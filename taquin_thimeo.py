@@ -15,7 +15,18 @@ CONFIG_FINALE = {
     7: {"x": 2, "y": 0},
     8: {"x": 2, "y": 1},
 }
-ETATS_TEMOINS = ()
+ETATS_TEMOINS = (
+    ((2, 5, 1), (6, 0, 4), (7, 3, 8)),
+    ((4, 6, 2), (1, 5, 8), (7, 3, 0)),
+    ((8, 0, 5), (4, 1, 7), (2, 6, 3)),
+    ((4, 1, 5), (0, 8, 7), (6, 2, 3)),
+    ((6, 3, 2), (5, 1, 7), (0, 8, 4)),
+    ((7, 6, 5), (2, 4, 1), (3, 8, 0)),
+    ((1, 7, 4), (8, 0, 2), (3, 6, 5)),
+    ((2, 0, 5), (6, 7, 3), (4, 1, 8)),
+    ((5, 3, 6), (8, 1, 7), (0, 4, 2)),
+    ((5, 2, 1), (3, 0, 4), (8, 7, 6)),
+)
 
 # --- Fonctions utilitaires ---
 
@@ -70,8 +81,11 @@ def heuristique_mannathan(etat):
     for i in range(3):
         for j in range(3):
             if etat[i][j] != 0:
-                somme += abs(i - CONFIG_FINALE[etat[i][j]]["x"])+ abs(j-CONFIG_FINALE[etat[i][j]]["y"])
+                somme += abs(i - CONFIG_FINALE[etat[i][j]]["x"]) + abs(
+                    j - CONFIG_FINALE[etat[i][j]]["y"]
+                )
     return somme
+
 
 def afficher_taquin(etat):
     """Affiche joliment un état du taquin."""
@@ -126,7 +140,9 @@ def main():
         afficher_taquin(etat_courant)
 
         for move, etat_suivant in chemin:
-            print(f"Coup : {move} (heuristique = {heuristique(etat_suivant)})\n heuristique mannathan = {heuristique_mannathan(etat_suivant)} ")
+            print(
+                f"Coup : {move} (heuristique = {heuristique(etat_suivant)})\n heuristique mannathan = {heuristique_mannathan(etat_suivant)} "
+            )
             afficher_taquin(etat_suivant)
             etat_courant = etat_suivant
 
@@ -135,8 +151,9 @@ def main():
         print(f"Nombre final d'états dans open : {taille_open}")
         print(f"Nombre d'états visités : {taille_visited}")
 
+
 print("heuristique mannathan")
-print(heuristique_mannathan(((1,2,4),(3,5,6),(8,7,0))))
+print(heuristique_mannathan(((1, 2, 4), (3, 5, 6), (8, 7, 0))))
 
 if __name__ == "__main__":
     main()
@@ -151,4 +168,3 @@ if __name__ == "__main__":
 # former un graphe avec
 
 # voir comment assembler plusieurs graphes ensembles
-
