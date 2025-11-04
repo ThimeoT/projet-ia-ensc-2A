@@ -28,9 +28,8 @@ ETATS_TEMOINS = (
     ((5, 2, 1), (3, 0, 4), (8, 7, 6)),
 )
 
+
 # --- Fonctions utilitaires ---
-
-
 def lire_taquin():
     print("Entrez le taquin initial ligne par ligne (avec 0 pour la case vide) :")
     etat = []
@@ -131,7 +130,6 @@ def main():
     print("\nRésolution en cours...\n")
 
     chemin, final, taille_open, taille_visited = a_etoile(initial)
-
     if chemin is None:
         print("Aucune solution trouvée.")
     else:
@@ -152,17 +150,28 @@ def main():
         print(f"Nombre d'états visités : {taille_visited}")
 
 
-print("heuristique mannathan")
-print(heuristique_mannathan(((1, 2, 4), (3, 5, 6), (8, 7, 0))))
-
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
 
 
 ### But du prochain code
+def construire_tableau_coups_heuristiques():
+    # prendre 10 configs initiales (on commence par une)
+    initial = ETATS_TEMOINS[1]
+    chemin, final, taille_open, taille_visited = a_etoile(initial)
+    chemin = [x[1] for x in chemin] # pour n'avoir que les tuples de chaque config
+    # récupérer les valeurs à chaque étape du chemin pour les 3 heuristiques
+    resultat = []
+    for i in range(len(chemin)) :
+        resultat.append([len(chemin)-i, heuristique(chemin[i]),heuristique_mannathan(chemin[i])])
+        print([len(chemin)-i, heuristique(chemin[i]),heuristique_mannathan(chemin[i])])
+    # créer le graphe des données à partir du tableau
+    
+    
 
-# prendre 10 configs initiales
-# récupérer les valeurs à chaque étape du chemin pour une heuristique
+construire_tableau_coups_heuristiques()
+
+
 # retourner un tableau d'éléments
 # combiner deux tableaux d'éléments
 # former un graphe avec
