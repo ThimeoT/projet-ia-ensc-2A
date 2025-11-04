@@ -15,8 +15,7 @@ CONFIG_FINALE = {
     7: {"x": 2, "y": 0},
     8: {"x": 2, "y": 1},
 }
-ETATS_TEMOINS = 
-()
+ETATS_TEMOINS = ()
 
 # --- Fonctions utilitaires ---
 
