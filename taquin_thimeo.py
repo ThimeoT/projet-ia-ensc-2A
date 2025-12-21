@@ -1,5 +1,9 @@
 from heapq import heappush, heappop
+import pandas as pd  # pour manipuler et analyser les données
+import matplotlib.pyplot as plt  # pour créer des graphes
+import seaborn as sns  # surcouche de matplotlib pour de meilleurs rendus visuels (combiner nuage de points de plusieurs population avec régression)
 
+sns.set_style("darkgrid")
 # --- Configuration du taquin ---
 ETAT_OBJECTIF = ((1, 2, 3), (4, 5, 6), (7, 8, 0))
 
@@ -150,26 +154,99 @@ def main():
         print(f"Nombre d'états visités : {taille_visited}")
 
 
-# if __name__ == "__main__":
-#     main()
-
-
 ### But du prochain code
-def construire_tableau_coups_heuristiques():
+def recuperer_data_heuristiques(etat_initial=ETATS_TEMOINS[1]):
     # prendre 10 configs initiales (on commence par une)
-    initial = ETATS_TEMOINS[1]
-    chemin, final, taille_open, taille_visited = a_etoile(initial)
-    chemin = [x[1] for x in chemin] # pour n'avoir que les tuples de chaque config
+    chemin, final, taille_open, taille_visited = a_etoile(etat_initial)
+    chemin = [x[1] for x in chemin]  # pour n'avoir que les tuples de chaque config
     # récupérer les valeurs à chaque étape du chemin pour les 3 heuristiques
-    resultat = []
-    for i in range(len(chemin)) :
-        resultat.append([len(chemin)-i, heuristique(chemin[i]),heuristique_mannathan(chemin[i])])
-        print([len(chemin)-i, heuristique(chemin[i]),heuristique_mannathan(chemin[i])])
-    # créer le graphe des données à partir du tableau
-    
-    
+    resultat = pd.DataFrame(
+        columns=["coups restants", "heuristique", "type d'heuristique"]
+    )
+    for i in range(len(chemin)):
+        resultat.loc[i * 2] = [len(chemin) - i, heuristique(chemin[i]), "position"]
+        resultat.loc[(i * 2) + 1] = [
+            len(chemin) - i,
+            heuristique_mannathan(chemin[i]),
+            "mannathan",
+        ]
+    return resultat
 
-construire_tableau_coups_heuristiques()
+def recuperer_data_coup_heuristique_mannathan(etat_initial=ETATS_TEMOINS[1]):
+    # prendre 10 configs initiales (on commence par une)
+    chemin, final, taille_open, taille_visited = a_etoile(etat_initial)
+    chemin = [x[1] for x in chemin]  # pour n'avoir que les tuples de chaque config
+    # récupérer les valeurs à chaque étape du chemin pour les 3 heuristiques
+    resultat = pd.DataFrame(
+        columns=["coups restants", "heuristique simple", "heuristique mannathan"]
+    )
+    for i in range(len(chemin)):
+        resultat.loc[i] = [len(chemin) - i, heuristique(chemin[i]),heuristique_mannathan(chemin[i])]
+    return resultat
+
+
+def recuperer_data_moyennes_heuristiques():
+    """
+    Retourne les valeurs regroupées en fonction du nombre de coups pour les deux types d'heuristiques"
+    """
+    df = pd.DataFrame(columns=["coups restants", "heuristique simple", "heuristique mannathan"])
+    datas = []
+    for etat in ETATS_TEMOINS:
+        data = recuperer_data_coup_heuristique_mannathan(etat)
+        df = pd.concat((df, data))
+    means_grouped = []
+    
+    for i in range(1+max(df['coups restants'])):
+        means_grouped.append(df.loc[df["coups restants"]==i])
+    means_grouped = [x.mean() for x in means_grouped]
+    means_grouped = pd.DataFrame(means_grouped)
+    return means_grouped
+
+def tracer_moyennes(df):
+    
+    plt.plot(
+    'coups restants', 'heuristique simple', data=df,
+    marker='o', # marker type
+    markerfacecolor='blue', # color of marker
+    markersize=12, # size of marker
+    color='skyblue', # color of line
+    linewidth=4 # change width of line
+    )
+    plt.plot(
+    'coups restants', 'heuristique mannathan', data=df,
+    marker='o', # marker type
+    markerfacecolor='blue', # color of marker
+    markersize=12, # size of marker
+    color='skyblue', # color of line
+    linewidth=4 # change width of line
+    )
+        
+    # for i in range(len(chemin)):
+    #     resultat.loc[i * 2] = [len(chemin) - i, heuristique(chemin[i]), "position"]
+    #     resultat.loc[(i * 2) + 1] = [
+    #         len(chemin) - i,
+    #         heuristique_mannathan(chemin[i]),
+    #         "mannathan",
+    #     ]
+
+
+def tracer_plot_coups_heuristiques():
+    # créer le graphe des données à partir du tableau
+    data = recuperer_data_heuristiques()
+    sns.lmplot(
+        x="coups restants",
+        y="heuristique",
+        data=data,
+        hue="type d'heuristique",
+    )
+    plt.show()
+    print(data)
+
+
+recuperer_data_moyennes_heuristiques()
+
+
+# tracer_plot_coups_heuristiques()
 
 
 # retourner un tableau d'éléments
