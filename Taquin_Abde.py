@@ -1,7 +1,5 @@
 from heapq import heappush, heappop
 
-import math
-
 # --- Configuration du taquin ---
 ETAT_OBJECTIF = (
     (1, 2, 3),
@@ -54,35 +52,34 @@ def deplacements_possibles(etat):
 def heuristique(etat):
     """Heuristique : compte le nombre de tuiles mal placées."""
     mal_places = 0
-    for i in range(len(etat)):
-        for j in range(len(etat[i])):
+    for i in range(3):
+        for j in range(3):
             if etat[i][j] != 0 and etat[i][j] != ETAT_OBJECTIF[i][j]:
                 mal_places += 1
     return mal_places
 
-
-
-# Reponse a la question 2 : heuristique de la distance de Manhattan
-
 def heuristique_manhattan(etat):
+    """Q2 : Distance de Manhattan."""
     distance = 0
-    for i in range(3):
-        for j in range(3):
+    n = len(etat)
+    for i in range(n):
+        for j in range(n):
             valeur = etat[i][j]
             if valeur != 0:
-                x_goal, y_goal = divmod(valeur - 1, 3)
-                distance += abs(i - x_goal) + abs(j - y_goal)
+                # Calcul de la position cible pour cette valeur
+                target_x = (valeur - 1) // n
+                target_y = (valeur - 1) % n
+                distance += abs(i - target_x) + abs(j - target_y)
     return distance
 
-
-
-
-def heuristique_combined(etat):
-    return math.floor(0.2 * heuristique(etat) + 0.8 * heuristique_manhattan(etat))
-
-
-
-
+def heuristique_ponderee(etat):
+    """Q3 : Manhattan Pondérée (Weighted A*)."""
+    h = heuristique_manhattan(etat)
+    # Consigne : ne pas surestimer si < 5 coups restants
+    if h < 5:
+        return h
+    # Sinon on booste pour accélérer (W = 1.4 par exemple)
+    return h * 1.4
 
 
 def afficher_taquin(etat):
@@ -133,42 +130,17 @@ def main():
         etat_courant = initial
         afficher_taquin(etat_courant)
 
-        i = 1
         for move, etat_suivant in chemin:
-            print(f"Coup {i} : {move} (h = {heuristique(etat_suivant)}) (h_m = {heuristique_manhattan(etat_suivant)}) (h_c = {heuristique_combined(etat_suivant)}) (coups restants = {len(chemin) - i})")
+            print(f"Coup : {move} (heuristique = {heuristique(etat_suivant)}, heuristique Manhattan = {heuristique_manhattan(etat_suivant)}, heuristique Pondérée = {heuristique_ponderee(etat_suivant)})")
             afficher_taquin(etat_suivant)
             etat_courant = etat_suivant
-            i += 1
 
         print("🎯 Taquin résolu !")
         print(f"Nombre final d'états dans open : {taille_open}")
         print(f"Nombre d'états visités : {taille_visited}")
 
 
+if __name__ == "__main__":
+    main()
 
 
-
-
-etat = (
-    (8, 6, 7),
-    (2, 5, 4),
-    (0, 3, 1)
-)
-
-
-main()
-
-"""
-print(heuristique(etat))  # Devrait afficher 2 (les tuiles 5 et 6 sont mal placées)
-
-print(heuristique_manhattan(etat)) 
-"""
-
-
-"""
-config 1 : 14.5 / 24 // 16
-config 2 : 12 / 22 // 13
-config 3 : 19.5 / 23 // 20
-config 4 : 20 / 21 // 21
-config 5 : 18.5 / 22 // 19
-"""
