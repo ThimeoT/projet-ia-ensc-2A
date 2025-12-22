@@ -5,7 +5,13 @@ import seaborn as sns  # surcouche de matplotlib pour de meilleurs rendus visuel
 
 sns.set_style("darkgrid")
 # --- Configuration du taquin ---
-ETAT_OBJECTIF = ((1, 2, 3), (4, 5, 6), (7, 8, 0))
+ETAT_OBJECTIF = (
+    (1, 2, 3, 4, 5),
+    (6, 7, 8, 9, 10),
+    (11, 12, 13, 14, 15),
+    (16, 17, 18, 19, 20),
+    (21, 22, 23, 24, 0),
+)
 
 DEPLACEMENTS = {"Haut": (-1, 0), "Bas": (1, 0), "Gauche": (0, -1), "Droite": (0, 1)}
 
@@ -13,11 +19,27 @@ CONFIG_FINALE = {
     1: {"x": 0, "y": 0},
     2: {"x": 0, "y": 1},
     3: {"x": 0, "y": 2},
-    4: {"x": 1, "y": 0},
-    5: {"x": 1, "y": 1},
-    6: {"x": 1, "y": 2},
-    7: {"x": 2, "y": 0},
-    8: {"x": 2, "y": 1},
+    4: {"x": 0, "y": 3},
+    5: {"x": 0, "y": 4},
+    6: {"x": 1, "y": 0},
+    7: {"x": 1, "y": 1},
+    8: {"x": 1, "y": 2},
+    9: {"x": 1, "y": 3},
+    10: {"x": 1, "y": 4},
+    11: {"x": 2, "y": 0},
+    12: {"x": 2, "y": 1},
+    13: {"x": 2, "y": 2},
+    14: {"x": 2, "y": 3},
+    15: {"x": 2, "y": 4},
+    16: {"x": 3, "y": 0},
+    17: {"x": 3, "y": 1},
+    18: {"x": 3, "y": 2},
+    19: {"x": 3, "y": 3},
+    20: {"x": 3, "y": 4},
+    22: {"x": 4, "y": 1},
+    21: {"x": 4, "y": 0},
+    23: {"x": 4, "y": 2},
+    24: {"x": 4, "y": 3},
 }
 ETATS_TEMOINS = (
     ((2, 5, 1), (6, 0, 4), (7, 3, 8)),
@@ -116,13 +138,13 @@ def afficher_taquin(etat):
 # --- Algorithme A* ---
 
 
-def a_etoile(initial,type_heuristique : int):
+def a_etoile(initial, type_heuristique: int):
     open_set = []
-    if type_heuristique == 0 : 
+    if type_heuristique == 0:
         heappush(open_set, (heuristique(initial), 0, initial, []))
-    elif type_heuristique == 1 :
+    elif type_heuristique == 1:
         heappush(open_set, (heuristique_manhattan(initial), 0, initial, []))
-    elif type_heuristique == 2 :
+    elif type_heuristique == 2:
         heappush(open_set, (heuristique_manhattan_corrige(initial), 0, initial, []))
     visited = set()
 
@@ -140,11 +162,11 @@ def a_etoile(initial,type_heuristique : int):
         for move, next_state in deplacements_possibles(etat):
             if next_state not in visited:
                 new_g = g + 1
-                if type_heuristique == 0 : 
+                if type_heuristique == 0:
                     h = heuristique(next_state)
-                elif type_heuristique == 1 :
+                elif type_heuristique == 1:
                     h = heuristique_manhattan(next_state)
-                elif type_heuristique == 2 :
+                elif type_heuristique == 2:
                     h = heuristique_manhattan_corrige(next_state)
                 heappush(
                     open_set,
@@ -158,7 +180,7 @@ def main():
     initial = lire_taquin()
     print("\nRésolution en cours...\n")
 
-    chemin, final, taille_open, taille_visited = a_etoile(initial,0)
+    chemin, final, taille_open, taille_visited = a_etoile(initial, 0)
     if chemin is None:
         print("Aucune solution trouvée.")
     else:
@@ -182,7 +204,7 @@ def main():
 ### But du prochain code
 def recuperer_data_heuristiques(etat_initial=ETATS_TEMOINS[1]):
     # prendre 10 configs initiales (on commence par une)
-    chemin, final, taille_open, taille_visited = a_etoile(etat_initial,0)
+    chemin, final, taille_open, taille_visited = a_etoile(etat_initial, 0)
     chemin = [x[1] for x in chemin]  # pour n'avoir que les tuples de chaque config
     # récupérer les valeurs à chaque étape du chemin pour les 3 heuristiques
     resultat = pd.DataFrame(
@@ -200,7 +222,7 @@ def recuperer_data_heuristiques(etat_initial=ETATS_TEMOINS[1]):
 
 def recuperer_data_coup_heuristiques(etat_initial=ETATS_TEMOINS[1]):
     # prendre 10 configs initiales (on commence par une)
-    chemin, final, taille_open, taille_visited = a_etoile(etat_initial,0)
+    chemin, final, taille_open, taille_visited = a_etoile(etat_initial, 0)
     print(taille_open)
     print("taille visités : ")
     print(taille_visited)
@@ -224,16 +246,21 @@ def recuperer_data_coup_heuristiques(etat_initial=ETATS_TEMOINS[1]):
         ]
     return resultat
 
+
 def recuperer_data_noeuds_explores(etat_initial=ETATS_TEMOINS[1]):
     # prendre 10 configs initiales (on commence par une)
-    chemin, final, taille_open, taille_visited = a_etoile(etat_initial,0)
-    chemin_m, final_m, taille_open_m, taille_visited_m = a_etoile(etat_initial,1)
-    chemin_m_c, final_m_c, taille_open_m_c, taille_visited_m_c = a_etoile(etat_initial,2)
-    
+    chemin, final, taille_open, taille_visited = a_etoile(etat_initial, 0)
+    chemin_m, final_m, taille_open_m, taille_visited_m = a_etoile(etat_initial, 1)
+    chemin_m_c, final_m_c, taille_open_m_c, taille_visited_m_c = a_etoile(
+        etat_initial, 2
+    )
+
     chemin = [x[1] for x in chemin]  # pour n'avoir que les tuples de chaque config
     chemin_m = [x[1] for x in chemin_m]  # pour n'avoir que les tuples de chaque config
-    chemin_m_c = [x[1] for x in chemin_m_c]  # pour n'avoir que les tuples de chaque config
-    
+    chemin_m_c = [
+        x[1] for x in chemin_m_c
+    ]  # pour n'avoir que les tuples de chaque config
+
     # récupérer les valeurs à chaque étape du chemin pour les 3 heuristiques
     resultat = pd.DataFrame(
         columns=[
@@ -245,13 +272,16 @@ def recuperer_data_noeuds_explores(etat_initial=ETATS_TEMOINS[1]):
             "visited manhattan corrige",
         ]
     )
-    resultat.loc[0] = [ taille_open,taille_visited,taille_open_m,taille_visited_m,taille_open_m_c,taille_visited_m_c
-        ]
+    resultat.loc[0] = [
+        taille_open,
+        taille_visited,
+        taille_open_m,
+        taille_visited_m,
+        taille_open_m_c,
+        taille_visited_m_c,
+    ]
     print(resultat)
     return resultat
-
-
-
 
 
 def recuperer_data_moyennes_heuristiques():
@@ -338,7 +368,6 @@ def tracer_plot_heuristiques_selon_coups_restants(df):
     plt.show()
 
 
-
 def tracer_plot_coups_heuristiques():
     # créer le graphe des données à partir du tableau
     data = recuperer_data_heuristiques()
@@ -350,6 +379,7 @@ def tracer_plot_coups_heuristiques():
     )
     plt.show()
     print(data)
+
 
 recuperer_data_noeuds_explores()
 tracer_plot_heuristiques_selon_coups_restants(recuperer_data_moyennes_heuristiques())
