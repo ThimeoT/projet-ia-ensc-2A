@@ -90,6 +90,21 @@ def heuristique_manhattan(etat):
     return somme
 
 
+def heuristique_manhattan_corrige(etat):
+    """Heuristique de manhattan : compte la somme des distances
+    de manhattan pour chaque tuile à leur bonne place"""
+    somme = 0
+    for i in range(3):
+        for j in range(3):
+            if etat[i][j] != 0:
+                somme += abs(i - CONFIG_FINALE[etat[i][j]]["x"]) + abs(
+                    j - CONFIG_FINALE[etat[i][j]]["y"]
+                )
+    if somme > 5:
+        somme += 0.08 * ((somme - 5) ** 2)
+    return somme
+
+
 def afficher_taquin(etat):
     """Affiche joliment un état du taquin."""
     for i in range(3):
@@ -101,9 +116,14 @@ def afficher_taquin(etat):
 # --- Algorithme A* ---
 
 
-def a_etoile(initial):
+def a_etoile(initial,type_heuristique : int):
     open_set = []
-    heappush(open_set, (heuristique(initial), 0, initial, []))
+    if type_heuristique == 0 : 
+        heappush(open_set, (heuristique(initial), 0, initial, []))
+    elif type_heuristique == 1 :
+        heappush(open_set, (heuristique_manhattan(initial), 0, initial, []))
+    elif type_heuristique == 2 :
+        heappush(open_set, (heuristique_manhattan_corrige(initial), 0, initial, []))
     visited = set()
 
     while open_set:
@@ -120,7 +140,12 @@ def a_etoile(initial):
         for move, next_state in deplacements_possibles(etat):
             if next_state not in visited:
                 new_g = g + 1
-                h = heuristique(next_state)
+                if type_heuristique == 0 : 
+                    h = heuristique(next_state)
+                elif type_heuristique == 1 :
+                    h = heuristique_manhattan(next_state)
+                elif type_heuristique == 2 :
+                    h = heuristique_manhattan_corrige(next_state)
                 heappush(
                     open_set,
                     (new_g + h, new_g, next_state, chemin + [(move, next_state)]),
@@ -133,7 +158,7 @@ def main():
     initial = lire_taquin()
     print("\nRésolution en cours...\n")
 
-    chemin, final, taille_open, taille_visited = a_etoile(initial)
+    chemin, final, taille_open, taille_visited = a_etoile(initial,0)
     if chemin is None:
         print("Aucune solution trouvée.")
     else:
@@ -157,7 +182,7 @@ def main():
 ### But du prochain code
 def recuperer_data_heuristiques(etat_initial=ETATS_TEMOINS[1]):
     # prendre 10 configs initiales (on commence par une)
-    chemin, final, taille_open, taille_visited = a_etoile(etat_initial)
+    chemin, final, taille_open, taille_visited = a_etoile(etat_initial,0)
     chemin = [x[1] for x in chemin]  # pour n'avoir que les tuples de chaque config
     # récupérer les valeurs à chaque étape du chemin pour les 3 heuristiques
     resultat = pd.DataFrame(
@@ -173,13 +198,21 @@ def recuperer_data_heuristiques(etat_initial=ETATS_TEMOINS[1]):
     return resultat
 
 
-def recuperer_data_coup_heuristique_manhattan(etat_initial=ETATS_TEMOINS[1]):
+def recuperer_data_coup_heuristiques(etat_initial=ETATS_TEMOINS[1]):
     # prendre 10 configs initiales (on commence par une)
-    chemin, final, taille_open, taille_visited = a_etoile(etat_initial)
+    chemin, final, taille_open, taille_visited = a_etoile(etat_initial,0)
+    print(taille_open)
+    print("taille visités : ")
+    print(taille_visited)
     chemin = [x[1] for x in chemin]  # pour n'avoir que les tuples de chaque config
     # récupérer les valeurs à chaque étape du chemin pour les 3 heuristiques
     resultat = pd.DataFrame(
-        columns=["coups restants", "heuristique simple", "heuristique manhattan"]
+        columns=[
+            "coups restants",
+            "heuristique simple",
+            "heuristique manhattan",
+            "heuristique manhattan corrige",
+        ]
     )
     for i in range(len(chemin)):
         # on veut que le dernier état ait "coups restants" = 0
@@ -187,8 +220,38 @@ def recuperer_data_coup_heuristique_manhattan(etat_initial=ETATS_TEMOINS[1]):
             len(chemin) - i - 1,
             heuristique(chemin[i]),
             heuristique_manhattan(chemin[i]),
+            heuristique_manhattan_corrige(chemin[i]),
         ]
     return resultat
+
+def recuperer_data_noeuds_explores(etat_initial=ETATS_TEMOINS[1]):
+    # prendre 10 configs initiales (on commence par une)
+    chemin, final, taille_open, taille_visited = a_etoile(etat_initial,0)
+    chemin_m, final_m, taille_open_m, taille_visited_m = a_etoile(etat_initial,1)
+    chemin_m_c, final_m_c, taille_open_m_c, taille_visited_m_c = a_etoile(etat_initial,2)
+    
+    chemin = [x[1] for x in chemin]  # pour n'avoir que les tuples de chaque config
+    chemin_m = [x[1] for x in chemin_m]  # pour n'avoir que les tuples de chaque config
+    chemin_m_c = [x[1] for x in chemin_m_c]  # pour n'avoir que les tuples de chaque config
+    
+    # récupérer les valeurs à chaque étape du chemin pour les 3 heuristiques
+    resultat = pd.DataFrame(
+        columns=[
+            "open simple",
+            "visited simple",
+            "open manhattan",
+            "visited manhattan",
+            "open manhattan corrige",
+            "visited manhattan corrige",
+        ]
+    )
+    resultat.loc[0] = [ taille_open,taille_visited,taille_open_m,taille_visited_m,taille_open_m_c,taille_visited_m_c
+        ]
+    print(resultat)
+    return resultat
+
+
+
 
 
 def recuperer_data_moyennes_heuristiques():
@@ -196,17 +259,43 @@ def recuperer_data_moyennes_heuristiques():
     Retourne les valeurs regroupées en fonction du nombre de coups pour les deux types d'heuristiques
     """
     df = pd.DataFrame(
-        columns=["coups restants", "heuristique simple", "heuristique manhattan"]
+        columns=[
+            "coups restants",
+            "heuristique simple",
+            "heuristique manhattan",
+            "heuristique mannathan corrige",
+        ]
     )
     for etat in ETATS_TEMOINS:
-        data = recuperer_data_coup_heuristique_manhattan(etat)
+        data = recuperer_data_coup_heuristiques(etat)
         df = pd.concat((df, data), ignore_index=True)
     # regrouper par 'coups restants' et calculer la moyenne pour chaque groupe
     means_grouped = df.groupby("coups restants").mean().reset_index()
+
     return means_grouped
 
 
-def tracer_moyennes(df):
+# def recuperer_data_moyennes_heuristiques_corrige():
+#     """
+#     Retourne les valeurs regroupées en fonction du nombre de coups pour les deux types d'heuristiques
+#     """
+#     df = pd.DataFrame(
+#         columns=[
+#             "coups restants",
+#             "heuristique simple",
+#             "heuristique manhattan corrige",
+#         ]
+#     )
+#     for etat in ETATS_TEMOINS:
+#         data = recuperer_data_coup_heuristique_manhattan_corrige(etat)
+#         df = pd.concat((df, data), ignore_index=True)
+#     # regrouper par 'coups restants' et calculer la moyenne pour chaque groupe
+#     means_grouped = df.groupby("coups restants").mean().reset_index()
+
+#     return means_grouped
+
+
+def tracer_plot_heuristiques_selon_coups_restants(df):
 
     plt.plot(
         "coups restants",
@@ -235,19 +324,19 @@ def tracer_moyennes(df):
         marker="",  # marker type
         color="olive",  # color of line
     )
-    # show legend
+    plt.plot(
+        "coups restants",
+        "heuristique manhattan corrige",
+        data=df,
+        marker="p",  # marker type
+        markerfacecolor="purple",  # color of marker
+        markersize=12,  # size of marker
+        color="pink",  # color of line
+        linewidth=4,  # change width of line
+    )
     plt.legend()
-
-    # show graph
     plt.show()
 
-    # for i in range(len(chemin)):
-    #     resultat.loc[i * 2] = [len(chemin) - i, heuristique(chemin[i]), "position"]
-    #     resultat.loc[(i * 2) + 1] = [
-    #         len(chemin) - i,
-    #         heuristique_manhattan(chemin[i]),
-    #         "manhattan",
-    #     ]
 
 
 def tracer_plot_coups_heuristiques():
@@ -262,8 +351,10 @@ def tracer_plot_coups_heuristiques():
     plt.show()
     print(data)
 
-
-tracer_moyennes(recuperer_data_moyennes_heuristiques())
+# tracer_plot_heuristiques_selon_coups_restants(recuperer_data_moyennes_heuristiques())
+recuperer_data_noeuds_explores()
+# a =evaluer_heuristiques_par_coups()
+# print(a.tail(10))
 # retourner un tableau d'éléments
 # combiner deux tableaux d'éléments
 # former un graphe avec
