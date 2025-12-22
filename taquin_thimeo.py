@@ -164,13 +164,14 @@ def recuperer_data_heuristiques(etat_initial=ETATS_TEMOINS[1]):
         columns=["coups restants", "heuristique", "type d'heuristique"]
     )
     for i in range(len(chemin)):
-        resultat.loc[i * 2] = [len(chemin) - i, heuristique(chemin[i]), "position"]
+        resultat.loc[i * 2] = [len(chemin) - i - 1, heuristique(chemin[i]), "position"]
         resultat.loc[(i * 2) + 1] = [
-            len(chemin) - i,
+            len(chemin) - i - 1,
             heuristique_mannathan(chemin[i]),
             "mannathan",
         ]
     return resultat
+
 
 def recuperer_data_coup_heuristique_mannathan(etat_initial=ETATS_TEMOINS[1]):
     # prendre 10 configs initiales (on commence par une)
@@ -181,46 +182,65 @@ def recuperer_data_coup_heuristique_mannathan(etat_initial=ETATS_TEMOINS[1]):
         columns=["coups restants", "heuristique simple", "heuristique mannathan"]
     )
     for i in range(len(chemin)):
-        resultat.loc[i] = [len(chemin) - i, heuristique(chemin[i]),heuristique_mannathan(chemin[i])]
+        # on veut que le dernier état ait "coups restants" = 0
+        resultat.loc[i] = [
+            len(chemin) - i - 1,
+            heuristique(chemin[i]),
+            heuristique_mannathan(chemin[i]),
+        ]
     return resultat
 
 
 def recuperer_data_moyennes_heuristiques():
     """
-    Retourne les valeurs regroupées en fonction du nombre de coups pour les deux types d'heuristiques"
+    Retourne les valeurs regroupées en fonction du nombre de coups pour les deux types d'heuristiques
     """
-    df = pd.DataFrame(columns=["coups restants", "heuristique simple", "heuristique mannathan"])
-    datas = []
+    df = pd.DataFrame(
+        columns=["coups restants", "heuristique simple", "heuristique mannathan"]
+    )
     for etat in ETATS_TEMOINS:
         data = recuperer_data_coup_heuristique_mannathan(etat)
-        df = pd.concat((df, data))
-    means_grouped = []
-    
-    for i in range(1+max(df['coups restants'])):
-        means_grouped.append(df.loc[df["coups restants"]==i])
-    means_grouped = [x.mean() for x in means_grouped]
-    means_grouped = pd.DataFrame(means_grouped)
+        df = pd.concat((df, data), ignore_index=True)
+    # regrouper par 'coups restants' et calculer la moyenne pour chaque groupe
+    means_grouped = df.groupby("coups restants").mean().reset_index()
     return means_grouped
 
+
 def tracer_moyennes(df):
-    
+
     plt.plot(
-    'coups restants', 'heuristique simple', data=df,
-    marker='o', # marker type
-    markerfacecolor='blue', # color of marker
-    markersize=12, # size of marker
-    color='skyblue', # color of line
-    linewidth=4 # change width of line
+        "coups restants",
+        "heuristique simple",
+        data=df,
+        marker="o",  # marker type
+        markerfacecolor="blue",  # color of marker
+        markersize=12,  # size of marker
+        color="skyblue",  # color of line
+        linewidth=4,  # change width of line
     )
     plt.plot(
-    'coups restants', 'heuristique mannathan', data=df,
-    marker='o', # marker type
-    markerfacecolor='blue', # color of marker
-    markersize=12, # size of marker
-    color='skyblue', # color of line
-    linewidth=4 # change width of line
+        "coups restants",
+        "heuristique mannathan",
+        data=df,
+        marker="o",  # marker type
+        markerfacecolor="red",  # color of marker
+        markersize=12,  # size of marker
+        color="darkred",  # color of line
+        linewidth=4,  # change width of line
     )
-        
+    plt.plot(
+        "coups restants",
+        "coups restants",
+        data=df,
+        marker="",  # marker type
+        color="olive",  # color of line
+    )
+    # show legend
+    plt.legend()
+
+    # show graph
+    plt.show()
+
     # for i in range(len(chemin)):
     #     resultat.loc[i * 2] = [len(chemin) - i, heuristique(chemin[i]), "position"]
     #     resultat.loc[(i * 2) + 1] = [
@@ -243,12 +263,7 @@ def tracer_plot_coups_heuristiques():
     print(data)
 
 
-recuperer_data_moyennes_heuristiques()
-
-
-# tracer_plot_coups_heuristiques()
-
-
+tracer_moyennes(recuperer_data_moyennes_heuristiques())
 # retourner un tableau d'éléments
 # combiner deux tableaux d'éléments
 # former un graphe avec
