@@ -1,10 +1,18 @@
 from heapq import heappush, heappop
 
 # --- Configuration du taquin ---
-ETAT_OBJECTIF = (
+ETAT_OBJECTIF3 = (
     (1, 2, 3),
     (4, 5, 6),
     (7, 8, 0)
+)
+
+ETAT_OBJECTIF5 = (
+    (1, 2, 3, 4, 5),   
+    (6, 7, 8, 9, 10),
+    (11, 12, 13, 14, 15),
+    (16, 17, 18, 19, 20),
+    (21, 22, 23, 24, 0)
 )
 
 DEPLACEMENTS = {
@@ -54,7 +62,7 @@ def heuristique(etat):
     mal_places = 0
     for i in range(3):
         for j in range(3):
-            if etat[i][j] != 0 and etat[i][j] != ETAT_OBJECTIF[i][j]:
+            if etat[i][j] != 0 and etat[i][j] != ETAT_OBJECTIF3[i][j]:
                 mal_places += 1
     return mal_places
 
@@ -75,8 +83,8 @@ def heuristique_manhattan(etat):
 def heuristique_ponderee(etat):
     """Q3 : Manhattan Pondérée (Weighted A*)."""
     h = heuristique_manhattan(etat)
-    # Consigne : ne pas surestimer si < 5 coups restants
-    if h < 5:
+    # Consigne : ne pas surestimer si < 10 coups restants
+    if h < 10:
         return h
     # Sinon on booste pour accélérer (W = 1.4 par exemple)
     return h * 1.4
@@ -100,7 +108,7 @@ def a_etoile(initial):
     while open_set:
         f, g, etat, chemin = heappop(open_set)
 
-        if etat == ETAT_OBJECTIF:
+        if etat == ETAT_OBJECTIF3:
             return chemin, etat, len(open_set), len(visited)
 
         if etat in visited:
